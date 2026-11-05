@@ -1,0 +1,13 @@
+{
+  "displayName": "janzsh",
+  "tagline": "Desarrollador de software · edita este texto en profile.json",
+  "location": "",
+  "website": "",
+  "languages": "",
+  "timezone": "",
+  "available": { "show": true, "text": "Disponible para proyectos" },
+  "now": { "building": "", "learning": "", "reading": "", "askMe": "" },
+  "stack": [],
+  "featured": [],
+  "rules": { "excludeForks": true, "excludeArchived": true, "minLanguageShare": 0.01, "excludeProfileRepo": true }
+}
