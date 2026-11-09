@@ -1,13 +1,26 @@
 {
   "displayName": "janzsh",
   "tagline": "Desarrollador de software · edita este texto en profile.json",
-  "location": "",
-  "website": "",
-  "languages": "",
-  "timezone": "",
-  "available": { "show": true, "text": "Disponible para proyectos" },
-  "now": { "building": "", "learning": "", "reading": "", "askMe": "" },
+  "location": "Santa Marta - Magdalena",
+  "website": "janzsh",
+  "languages": "Latam ES - ENG",
+  "timezone": "UTC-5 America/Bogota",
+  "available": {
+    "show": true,
+    "text": "Disponible para proyectos"
+  },
+  "now": {
+    "building": "Multi tenant auth system",
+    "learning": "AWS",
+    "reading": "The Stranger",
+    "askMe": ""
+  },
   "stack": [],
   "featured": [],
-  "rules": { "excludeForks": true, "excludeArchived": true, "minLanguageShare": 0.01, "excludeProfileRepo": true }
+  "rules": {
+    "excludeForks": true,
+    "excludeArchived": true,
+    "minLanguageShare": 0.01,
+    "excludeProfileRepo": true
+  }
 }
