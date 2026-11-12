@@ -32,7 +32,7 @@ function token() {
 
 // fetch con tiempo límite y hasta 3 intentos ante fallos transitorios (red, 5xx, 429).
 const TRIES = 3, TIMEOUT = 15000;
-async function request(label, url, init = {}) {
+async function request(label, url, init = {}, raw = false) {
   for (let i = 1; ; i++) {
     let res, err;
     try { res = await fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT) }); } catch (e) { err = e.message; }
@@ -40,7 +40,7 @@ async function request(label, url, init = {}) {
     if (transient && i < TRIES) { console.warn(`${label}: intento ${i} falló (${err || 'HTTP ' + res.status}), reintentando…`); await new Promise(r => setTimeout(r, 2000 * i)); continue; }
     if (err) throw new Error(`${label}: sin respuesta tras ${TRIES} intentos (${err})`);
     if (!res.ok) throw new Error(`${label}: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
-    return res.json();
+    return raw ? res : res.json();
   }
 }
 
@@ -55,7 +55,7 @@ async function gql(query, variables = {}) {
 }
 
 async function fetchData() {
-  const head = await gql(`{ viewer { login createdAt followers { totalCount }
+  const head = await gql(`{ viewer { login createdAt avatarUrl(size: 168) followers { totalCount }
     contributionsCollection {
       totalCommitContributions totalPullRequestContributions totalPullRequestReviewContributions totalIssueContributions
       contributionCalendar { totalContributions weeks { contributionDays { date contributionCount weekday } } }
@@ -74,7 +74,12 @@ async function fetchData() {
   const events = await request('Eventos', `https://api.github.com/users/${v.login}/events/public?per_page=50`, {
     headers: { Authorization: `bearer ${token()}`, Accept: 'application/vnd.github+json' },
   });
-  return { login: v.login, createdAt: v.createdAt, followers: v.followers.totalCount, cc: v.contributionsCollection, repos, events };
+  // El avatar va incrustado como data URI: GitHub muestra el SVG como <img> y ahí no se cargan imágenes externas.
+  const av = await request('Avatar', v.avatarUrl, {}, true);
+  const type = av.headers.get('content-type') || '';
+  if (!type.startsWith('image/')) throw new Error(`Avatar: tipo inesperado "${type}"`);
+  const avatar = `data:${type};base64,${Buffer.from(await av.arrayBuffer()).toString('base64')}`;
+  return { login: v.login, createdAt: v.createdAt, avatar, followers: v.followers.totalCount, cc: v.contributionsCollection, repos, events };
 }
 
 function sampleData() {
@@ -248,7 +253,9 @@ function render(d, m, th) {
     const { placed, rows } = flow(items, x0, xMax, 2, 'la cabecera');
     return { h: cy0 + 40 + (rows - 1) * 28, draw(x, y, h) {
       let inner = `<circle cx="${x + 50}" cy="${y + 62}" r="34" fill="none" stroke="#6d3df0" stroke-width="3"/><circle cx="${x + 50}" cy="${y + 62}" r="28" fill="${C.line}"/>`;
-      inner += t(x + 50, y + 71, (cfg.displayName || d.login)[0].toUpperCase(), { f: SANS, s: 26, w: 800, c: C.fg, a: 'middle' });
+      // Tu foto de GitHub dentro del círculo; sin avatar (modo --sample) queda la inicial.
+      inner += d.avatar ? `<clipPath id="av"><circle cx="${x + 50}" cy="${y + 62}" r="28"/></clipPath><image href="${d.avatar}" x="${x + 22}" y="${y + 34}" width="56" height="56" preserveAspectRatio="xMidYMid slice" clip-path="url(#av)"/>`
+        : t(x + 50, y + 71, (cfg.displayName || d.login)[0].toUpperCase(), { f: SANS, s: 26, w: 800, c: C.fg, a: 'middle' });
       inner += t(x + x0, y + 44, clip(cfg.displayName || d.login, xMax - x0, 24, SANS), { f: SANS, s: 24, w: 800, c: C.fg });
       inner += t(x + x0, y + 66, clip(cfg.tagline || '', xMax - x0, 13, SANS), { f: SANS, s: 13, c: C.mid });
       for (const p of placed) {

@@ -39,7 +39,7 @@ Hay dos versiones de la imagen, tema oscuro y claro, y el README muestra la que 
 
 | Campo | Qué es |
 | --- | --- |
-| `displayName` | Nombre grande de la cabecera. Su primera letra va en el avatar. |
+| `displayName` | Nombre grande de la cabecera. El círculo de al lado muestra tu foto de GitHub, que se descarga en cada ejecución (con `--sample`, la inicial de este nombre). |
 | `tagline` | La frase debajo del nombre. |
 | `location`, `website`, `languages` | Chips de la cabecera. Si alguno está vacío, no se muestra. |
 | `timezone` | Se muestra en la tarjeta "Cuenta". |
