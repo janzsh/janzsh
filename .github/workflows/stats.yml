@@ -18,6 +18,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,5 +32,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add stats
-          git diff --cached --quiet || (git commit -m "chore: actualizar estadísticas" && git push)
+          git add stats README.md
+          # pull --rebase por si llegó un push a main mientras corría el job
+          git diff --cached --quiet || (git commit -m "chore: actualizar estadísticas" && git pull --rebase && git push)

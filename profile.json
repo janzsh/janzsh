@@ -1,6 +1,6 @@
 {
   "displayName": "janzsh",
-  "tagline": "Desarrollador de software · edita este texto en profile.json",
+  "tagline": "T-Shaped Software Developer",
   "location": "Santa Marta - Magdalena",
   "website": "janzsh",
   "languages": "Latam ES - ENG",
@@ -16,11 +16,12 @@
     "askMe": ""
   },
   "stack": [],
-  "featured": [],
+  "featured": [
+    "janzsh"
+  ],
   "rules": {
     "excludeForks": true,
     "excludeArchived": true,
-    "minLanguageShare": 0.01,
-    "excludeProfileRepo": true
+    "minLanguageShare": 0.1
   }
 }
