@@ -2,7 +2,9 @@
 
 El README de este perfil es una imagen SVG estilo *bento* con estadísticas de GitHub. Un script de Node la genera y GitHub Actions la actualiza sola todos los días. No necesita dependencias ni servicios externos: solo la API de GitHub y un token.
 
-Hay cuatro versiones de la imagen: tema oscuro y claro, cada uno en escritorio (840 px, 3 columnas) y móvil (420 px, 1 columna). El README elige la adecuada según el tema y el ancho de la pantalla de quien lo ve.
+Hay dos versiones de la imagen, tema oscuro y claro, y el README muestra la que corresponde al tema de GitHub de quien lo ve.
+
+> **Ojo con `<picture>`:** GitHub reescribe con su propio JavaScript las condiciones `prefers-color-scheme` para seguir el tema de GitHub, y no entiende condiciones combinadas como `(max-width: 600px) and (prefers-color-scheme: dark)`. Si intentas añadir una versión por ancho de pantalla, termina mostrándose donde no toca. Usa solo `prefers-color-scheme: dark` y `prefers-color-scheme: light`.
 
 ## Archivos
 
@@ -76,4 +78,4 @@ Con `--out` los SVG se escriben en otra carpeta y no se tocan ni `stats/` ni el 
 
 ## Personalizar el diseño
 
-Los colores de ambos temas están en `THEMES`, dentro de `scripts/build.mjs`. El orden de las tarjetas está en `layout`, al final de la función `render`: una lista de filas para escritorio y otra de una columna para móvil.
+Los colores de ambos temas están en `THEMES`, dentro de `scripts/build.mjs`. El orden de las tarjetas está en `layout`, al final de la función `render`: cada fila es una lista de tarjetas con su ancho.

@@ -1,4 +1,4 @@
-// Genera stats/bento-{dark,light}.svg (escritorio) y stats/bento-mobile-{dark,light}.svg a partir de la API de GitHub.
+// Genera stats/bento-dark.svg y stats/bento-light.svg a partir de la API de GitHub.
 // Uso: node scripts/build.mjs                 (usa GH_TOKEN o `gh auth token`)
 //      node scripts/build.mjs --sample        (datos de ejemplo, sin red)
 //      node scripts/build.mjs --out <carpeta> (escribe los SVG ahí en vez de stats/)
@@ -200,11 +200,9 @@ function summary(d, m) {
 const warned = new Set();
 const warnOnce = msg => { if (!warned.has(msg)) { warned.add(msg); console.warn(msg); } };
 
-// Escritorio: cuadrícula de 3 columnas a 840 px. Móvil: una columna a 420 px, para que el texto
-// no quede diminuto al escalar la imagen al ancho de un teléfono.
-function render(d, m, th, mobile = false) {
+function render(d, m, th) {
   const C = THEMES[th];
-  const W = mobile ? 420 : 840, P = 16, G = 10, IN = W - 2 * P;
+  const W = 840, P = 16, G = 10, IN = W - 2 * P;
   const A = (IN - 2 * G) / 3, B = 2 * A + G;
   const toward = th === 'dark' ? '#ffffff' : '#000000';
   let body = '';
@@ -243,19 +241,16 @@ function render(d, m, th, mobile = false) {
   const S = {};
 
   S.identity = w => {
-    const narrow = w < 500, x0 = 100, xMax = w - 16;
-    const tag = narrow ? wrap(cfg.tagline || '', xMax - x0, 2, 13, SANS) : [clip(cfg.tagline || '', xMax - x0, 13, SANS)];
-    // En móvil los chips van debajo del avatar, a todo el ancho.
-    const cx0 = narrow ? 16 : x0, cy0 = narrow ? 112 : 84;
+    const x0 = 100, xMax = w - 16, cy0 = 84;
     const items = [];
     if (cfg.available?.show) items.push({ k: 'pill', s: cfg.available.text, pad: 34 });
     [cfg.location, cfg.website, cfg.languages].filter(Boolean).forEach(s => items.push({ k: 'chip', s, pad: 20 }));
-    const { placed, rows } = flow(items, cx0, xMax, narrow ? 3 : 2, 'la cabecera');
+    const { placed, rows } = flow(items, x0, xMax, 2, 'la cabecera');
     return { h: cy0 + 40 + (rows - 1) * 28, draw(x, y, h) {
       let inner = `<circle cx="${x + 50}" cy="${y + 62}" r="34" fill="none" stroke="#6d3df0" stroke-width="3"/><circle cx="${x + 50}" cy="${y + 62}" r="28" fill="${C.line}"/>`;
       inner += t(x + 50, y + 71, (cfg.displayName || d.login)[0].toUpperCase(), { f: SANS, s: 26, w: 800, c: C.fg, a: 'middle' });
       inner += t(x + x0, y + 44, clip(cfg.displayName || d.login, xMax - x0, 24, SANS), { f: SANS, s: 24, w: 800, c: C.fg });
-      tag.forEach((l, i) => { inner += t(x + x0, y + 66 + i * 16, l, { f: SANS, s: 13, c: C.mid }); });
+      inner += t(x + x0, y + 66, clip(cfg.tagline || '', xMax - x0, 13, SANS), { f: SANS, s: 13, c: C.mid });
       for (const p of placed) {
         const px = x + p.x, py = y + cy0 + p.row * 28;
         if (p.k === 'pill') inner += `<rect x="${px}" y="${py}" width="${p.w}" height="22" rx="11" fill="${C.pillBg}"/><circle cx="${px + 13}" cy="${py + 11}" r="3.5" fill="${C.green}"/>${t(px + 23, py + 15, p.s, { c: C.green })}`;
@@ -286,28 +281,26 @@ function render(d, m, th, mobile = false) {
     tile(x, y, w, h, 'Lenguaje más usado', inner, 'url(#hg)');
   } });
 
-  S.langs = w => { const narrow = w < 500; return { h: narrow ? 218 : 196, draw(x, y, h) {
-    let li = ''; const colW = (w - 32) / 3, share = Math.round(cfg.rules.minLanguageShare * 100);
+  S.langs = w => ({ h: 196, draw(x, y, h) {
+    let li = ''; const share = Math.round(cfg.rules.minLanguageShare * 100);
     m.langs.slice(1, 4).forEach((l, i) => {
-      // En móvil no cabe el nombre al lado del anillo: va debajo, centrado.
-      const cx = narrow ? +(x + 16 + colW * (i + 0.5)).toFixed(1) : x + 16 + 32 + i * 160, cy = y + 74, r = 26, c = 2 * Math.PI * r, p = l.n / m.NL;
+      const cx = x + 16 + 32 + i * 160, cy = y + 74, r = 26, c = 2 * Math.PI * r, p = l.n / m.NL;
       li += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${C.track}" stroke-width="8"/>`;
       li += `<circle class="ring" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${legible(l.color, C.tile, toward)}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c * (1 - p)).toFixed(1)}" style="--c:${c.toFixed(1)}" transform="rotate(-90 ${cx} ${cy})"/>`;
       li += t(cx, cy + 4, Math.round(p * 100) + '%', { s: 12, w: 700, c: C.fg, a: 'middle' });
       const sub = `${l.n}/${m.NL} ${m.NL === 1 ? 'repo' : 'repos'}`;
-      li += narrow ? t(cx, cy + 50, clip(l.name, colW - 8, 12), { c: C.fg, s: 12, a: 'middle' }) + t(cx, cy + 64, sub, { c: C.mut, s: 10, a: 'middle' })
-        : t(cx + 38, cy - 4, cut(l.name, 11), { c: C.fg, s: 12 }) + t(cx + 38, cy + 12, sub, { c: C.mut, s: 10 });
+      li += t(cx + 38, cy - 4, cut(l.name, 11), { c: C.fg, s: 12 }) + t(cx + 38, cy + 12, sub, { c: C.mut, s: 10 });
     });
-    let cx = x + 16, cy = y + (narrow ? 150 : 126);
+    let cx = x + 16, cy = y + 126;
     for (const l of m.langs.slice(4, 14)) {
       const c = chip(cx, cy, `${l.name} ${Math.round((l.n / m.NL) * 100)}%`);
       if (cx + c.w > x + w - 16) { cx = x + 16; cy += 28; if (cy > y + h - 44) break; }
       li += chip(cx, cy, `${l.name} ${Math.round((l.n / m.NL) * 100)}%`).svg; cx += c.w + 6;
     }
-    li += t(x + 16, y + h - 12, narrow ? `% = repos con ≥${share}% de ese lenguaje` : `% = repos donde el lenguaje pesa al menos ${share}% / repos con código`, { c: C.mut, s: 10 });
+    li += t(x + 16, y + h - 12, `% = repos donde el lenguaje pesa al menos ${share}% / repos con código`, { c: C.mut, s: 10 });
     if (!m.langs.length) li += t(x + 16, y + 80, 'Aún no hay código para analizar.', { c: C.mid, s: 13, f: SANS });
     tile(x, y, w, h, 'Lenguajes por repos', li);
-  } }; };
+  } });
 
   S.repos = w => ({ h: 128, draw(x, y, h) {
     let r = ''; const n = Math.min(m.N, 24); const cw = (w - 32 - (Math.max(n, 1) - 1) * 4) / Math.max(n, 1);
@@ -332,9 +325,8 @@ function render(d, m, th, mobile = false) {
     tile(x, y, w, h, 'Rachas, últimos 12 meses', rc);
   } });
 
-  // En móvil, 53 semanas darían celdas de ~4 px: se muestran las últimas 26.
-  S.heat = w => { const narrow = w < 500; return { h: 166, draw(x, y, h) {
-    const all = d.cc.contributionCalendar.weeks, weeks = narrow ? all.slice(-26) : all;
+  S.heat = w => ({ h: 166, draw(x, y, h) {
+    const weeks = d.cc.contributionCalendar.weeks;
     const step = (w - 32) / weeks.length, cs = step - 2.4;
     const max = Math.max(1, ...weeks.flatMap(wk => wk.contributionDays.map(c => c.contributionCount)));
     let s = ''; let lastMonth = -1, lastLbl = -9;
@@ -348,8 +340,8 @@ function render(d, m, th, mobile = false) {
     s += t(lx, y + 24, 'más', { c: C.mut, s: 9, a: 'end' }); lx -= tw('más', 9) + 6;
     for (let lv = 4; lv >= 0; lv--) { lx -= 10; s += `<rect x="${lx.toFixed(1)}" y="${y + 15}" width="10" height="10" rx="2" fill="${C.heat[lv]}"/>`; lx -= 3; }
     s += t(lx - 3, y + 24, 'menos', { c: C.mut, s: 9, a: 'end' });
-    tile(x, y, w, h, `Contribuciones, últimos ${narrow ? 6 : 12} meses`, s);
-  } }; };
+    tile(x, y, w, h, 'Contribuciones, últimos 12 meses', s);
+  } });
 
   S.types = w => ({ h: 172, draw(x, y, h) {
     const cc = d.cc;
@@ -418,9 +410,7 @@ function render(d, m, th, mobile = false) {
     } };
   };
 
-  const layout = mobile
-    ? ['identity', 'account', 'hero', 'langs', 'repos', 'impact', 'streaks', 'heat', 'types', 'weekday', 'now', 'featured', 'recent', 'stack'].map(k => [[k, IN]])
-    : [[['identity', B], ['account', A]], [['hero', A], ['langs', B]], [['repos', A], ['impact', A], ['streaks', A]], [['heat', IN]],
+  const layout = [[['identity', B], ['account', A]], [['hero', A], ['langs', B]], [['repos', A], ['impact', A], ['streaks', A]], [['heat', IN]],
       [['types', A], ['weekday', A], ['now', A]], [['featured', B], ['recent', A]], [['stack', IN]]];
   let y = P;
   for (const row of layout) {
@@ -431,9 +421,8 @@ function render(d, m, th, mobile = false) {
 
   const priv = 'Los repos privados solo suman a los números, nunca se muestran por nombre';
   body += t(P, y + 12, `Actualizado automáticamente · ${NOW.toISOString().slice(0, 10)} UTC`, { c: C.mut, s: 10 });
-  let H;
-  if (mobile) { const ls = wrap(priv, IN, 2, 10); ls.forEach((l, i) => { body += t(P, y + 28 + i * 14, l, { c: C.mut, s: 10 }); }); H = y + 28 + (ls.length - 1) * 14 + P; }
-  else { body += t(P + IN, y + 12, priv, { c: C.mut, s: 10, a: 'end' }); H = y + 12 + P; }
+  body += t(P + IN, y + 12, priv, { c: C.mut, s: 10, a: 'end' });
+  const H = y + 12 + P;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(summary(d, m))}">
 <style>.ring{animation:draw 1.2s ease-out both}@keyframes draw{from{stroke-dashoffset:var(--c)}}@media (prefers-reduced-motion:reduce){.ring{animation:none}}</style>
 <rect width="${W}" height="${H}" rx="16" fill="${C.bg}"/>${body}</svg>`;
@@ -449,10 +438,7 @@ catch (e) {
 }
 const m = compute(data);
 mkdirSync(OUT, { recursive: true });
-for (const th of ['dark', 'light']) {
-  writeFileSync(join(OUT, `bento-${th}.svg`), render(data, m, th));
-  writeFileSync(join(OUT, `bento-mobile-${th}.svg`), render(data, m, th, true));
-}
+for (const th of ['dark', 'light']) writeFileSync(join(OUT, `bento-${th}.svg`), render(data, m, th));
 // El alt del README se actualiza solo en una generación real (sin --out), no en las vistas previas.
 if (outArg === -1) {
   const readme = join(ROOT, 'README.md'), src = readFileSync(readme, 'utf8');
