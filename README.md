@@ -3,7 +3,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="stats/bento-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="stats/bento-light.svg">
-  <img alt="Estadísticas de GitHub de janzsh: 6 repos (3 públicos, 3 privados), lenguaje principal Astro (en 2 de 6 repos), 311 contribuciones en los últimos 12 meses, racha actual de 4 días y mejor racha de 6 días, 2 estrellas. Proyectos destacados: janzsh, portfolio, dotfiles." src="stats/bento-dark.svg" width="840">
+  <img alt="Estadísticas de GitHub de janzsh: 6 repos (3 públicos, 3 privados), lenguaje principal Astro (en 2 de 6 repos), 317 contribuciones en los últimos 12 meses, racha actual de 5 días y mejor racha de 6 días, 2 estrellas. Proyectos destacados: janzsh, portfolio, dotfiles." src="stats/bento-dark.svg" width="840">
 </picture>
 
 <p>
